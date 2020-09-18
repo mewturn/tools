@@ -52,4 +52,4 @@ def write_data_to_xlsx(data):
         try:
             wb.save(f"{file_dir}/{filename}")
         except Exception as e:
-            wb.save(f"{file_dir}/glossary{glossary_id}_client{details['client_id']}_{details['lang']}_{details['am_name']}.xlsx")
+            print(f"Issue with filename (likely invalid filename). Filename: {filename}")
