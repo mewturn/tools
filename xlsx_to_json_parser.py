@@ -1,7 +1,9 @@
 import json
 import os
 import xlsxwriter
+import pandas as pd
 
+# Parse a singular JSON file from file path into a XLSX format
 def parse_json_file(file_path):
     print(f"Processing {file_path}")
     workbook_name = file_path.split("/")[-1].replace(".json", ".xlsx")
@@ -24,42 +26,39 @@ def parse_json_file(file_path):
 
     workbook.close()
     print("Done!")
-    
+
+# Parse a JSON file by batch (folder)
 def parse_json_by_folder(folder_path):
     for r, d, f in os.walk(folder_path):
         for name in f:
             if ".json" in name:
                 file_path = os.path.join(r, name)
                 parse_json_file(file_path)
-                
+
+# Reconstruct a JSON file from XLSX file of the same name
 def reconstruct_json(file_path):
     print(f"Processing {file_path}")
-    xlsx_folder = "insightjsonmilton/"
     workbook_name = file_path.replace(".json", ".xlsx")
-    workbook_name = workbook_name.split("/")[-1]
-    workbook_name = f"{xlsx_folder}/{workbook_name}"
     output_name = file_path.replace(".json", "_output.json")
-    output_name = output_name.split("/")[-1]
-    output_name = f"{xlsx_folder}/{output_name}"
     
     try:
         r = pd.read_excel(f"{workbook_name}", header=None)
-        x = zip(r[2], r[3])
+        # r = [id, key, source, target]
+        x = zip(r[0], r[1], r[2], r[3])
     
         with open(file_path, "r", encoding="utf-8") as f:
-            data = f.read()
+            data = json.loads(f.read())
 
-            for i, j in x:
-                source = '"' + str(i) + '"'
-                target = '"' + str(j) + '"'
-                data = data.replace(source, target)
+            for id, key, source, target in x:
+                data[id]['_fields'][key]['value'] = target
 
             with open(output_name, "w", encoding="utf-8") as g:
-                g.write(data)
+                g.write(json.dumps(data, ensure_ascii=False))
 
     except FileNotFoundError:
-        print("XLSX file not found")
+        print(f"{workbook_name} not found.")
 
+# Reconstruct a JSON file from XLSX file of the same name (folder, batch process)
 def reconstruct_json_by_folder(folder_path):
     for r, d, f in os.walk(folder_path):
         for name in f:
